@@ -74,28 +74,22 @@ describe("e2e: upload then download", () => {
     const tarball2 = new Uint8Array([4, 5, 6]);
 
     const upload1 = await worker.fetch(
-      new Request(
-        "http://localhost/org/repo/commit/sha1/my-pkg",
-        {
-          method: "POST",
-          headers: { authorization: "Bearer key" },
-          body: tarball1,
-        },
-      ),
+      new Request("http://localhost/org/repo/commit/sha1/my-pkg", {
+        method: "POST",
+        headers: { authorization: "Bearer key" },
+        body: tarball1,
+      }),
       { ...env, API_KEY: "key" },
     );
 
     expect(upload1.status).toBe(201);
 
     const upload2 = await worker.fetch(
-      new Request(
-        "http://localhost/org/repo/commit/sha2/my-pkg",
-        {
-          method: "POST",
-          headers: { authorization: "Bearer key" },
-          body: tarball2,
-        },
-      ),
+      new Request("http://localhost/org/repo/commit/sha2/my-pkg", {
+        method: "POST",
+        headers: { authorization: "Bearer key" },
+        body: tarball2,
+      }),
       { ...env, API_KEY: "key" },
     );
 

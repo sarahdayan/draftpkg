@@ -11,10 +11,7 @@ import { resolvePackages } from "../src/resolve-packages";
 import type { ResolvedPackage } from "../src/resolve-packages";
 import type { CiConfig } from "@draftpkg/config";
 
-const FIXTURE_PATH = path.resolve(
-  import.meta.dirname,
-  "fixtures/sample-repo",
-);
+const FIXTURE_PATH = path.resolve(import.meta.dirname, "fixtures/sample-repo");
 
 const executor = createExecutor();
 

@@ -127,9 +127,7 @@ export async function setup(
   try {
     await executor.run("wrangler whoami");
   } catch {
-    throw new Error(
-      "Not logged in to Wrangler. Run `wrangler login` first.",
-    );
+    throw new Error("Not logged in to Wrangler. Run `wrangler login` first.");
   }
 
   // 2. Create KV namespace
@@ -143,18 +141,12 @@ export async function setup(
 
   // 4. Scaffold project
   await fs.mkdir(path.join(targetDir, "src"), { recursive: true });
-  await fs.writeFile(
-    path.join(targetDir, "src/index.js"),
-    WORKER_SOURCE,
-  );
+  await fs.writeFile(path.join(targetDir, "src/index.js"), WORKER_SOURCE);
   await fs.writeFile(
     path.join(targetDir, "wrangler.toml"),
     buildWranglerToml(kvNamespaceId),
   );
-  await fs.writeFile(
-    path.join(targetDir, "package.json"),
-    PACKAGE_JSON,
-  );
+  await fs.writeFile(path.join(targetDir, "package.json"), PACKAGE_JSON);
 
   // 5. Install dependencies
   await executor.run("npm install", { cwd: targetDir });
@@ -168,10 +160,9 @@ export async function setup(
 
   // 7. Set API key
   const apiKey = crypto.randomUUID();
-  await executor.run(
-    `echo "${apiKey}" | wrangler secret put API_KEY`,
-    { cwd: targetDir },
-  );
+  await executor.run(`echo "${apiKey}" | wrangler secret put API_KEY`, {
+    cwd: targetDir,
+  });
 
   return { workerUrl, apiKey };
 }
