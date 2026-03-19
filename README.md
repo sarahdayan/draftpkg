@@ -8,31 +8,31 @@ A self-hosted drop-in replacement for [CodeSandbox CI](https://codesandbox.io/do
 
 The Worker serves as your private registry. It runs on Cloudflare Workers with R2 (storage) and KV (metadata).
 
-**Prerequisites:** a Cloudflare account.
+**Prerequisites:** a [Cloudflare account](https://dash.cloudflare.com/sign-up) and [Wrangler](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and logged in (`wrangler login`).
 
 ```sh
-# Clone this repo
-git clone https://github.com/draftpkg/draftpkg.git
-cd draftpkg
-
-# Install dependencies
-pnpm install
-
-# Configure your Cloudflare account
-cd apps/worker
-
-# Edit wrangler.toml:
-# - Set a KV namespace ID (create one with `wrangler kv namespace create METADATA`)
-# - Set your R2 bucket name (create one with `wrangler r2 bucket create draftpkg-tarballs`)
-
-# Deploy
-wrangler deploy
-
-# Set your API key as a secret
-wrangler secret put API_KEY
+npx draftpkg setup
 ```
 
-Your registry is now live at `https://draftpkg-worker.<your-subdomain>.workers.dev`.
+This will:
+
+1. Create a KV namespace for metadata
+2. Create an R2 bucket for tarballs
+3. Deploy the Worker
+4. Generate an API key
+
+At the end, you'll see:
+
+```
+Draftpkg is ready!
+
+  Worker URL: https://draftpkg-worker.<your-subdomain>.workers.dev
+  API Key:    <generated-key>
+
+Add these as secrets in your GitHub repo:
+  DRAFTPKG_WORKER_URL
+  DRAFTPKG_API_KEY
+```
 
 ### 2. Add the Action to your repo
 
@@ -136,6 +136,7 @@ apps/
   worker/     Cloudflare Worker — upload API (authed) + registry (public)
 
 packages/
+  cli/        CLI tool (npx draftpkg setup)
   config/     Shared types, ci.json parser, URL helpers
 ```
 
@@ -146,6 +147,22 @@ pnpm install
 pnpm test        # unit tests
 pnpm check-types # type checking
 ```
+
+## Publishing (maintainers)
+
+The `draftpkg` CLI is published to npm via GitHub Actions with OIDC provenance (no token needed).
+
+To publish a new version:
+
+```sh
+# Update the version in packages/cli/package.json, then:
+git add packages/cli/package.json
+git commit -m "chore: release draftpkg@0.1.0"
+git tag cli@0.1.0
+git push && git push --tags
+```
+
+The publish workflow triggers on tags matching `cli@*` and verifies the tag is on `main` before publishing.
 
 ## License
 
