@@ -142,6 +142,7 @@ describe("POST /:org/:repo/commit/:sha/:pkg", () => {
     );
 
     expect(stored).not.toBeNull();
+    await stored!.arrayBuffer();
   });
 });
 
