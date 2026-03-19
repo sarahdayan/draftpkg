@@ -2,6 +2,11 @@
   "name": "draftpkg",
   "version": "0.1.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sarahdayan/draftpkg",
+    "directory": "packages/cli"
+  },
   "bin": {
     "draftpkg": "dist/cli.mjs"
   },
