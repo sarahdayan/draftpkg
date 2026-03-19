@@ -1,3 +1,7 @@
+import fs from "node:fs/promises";
+
+import { buildCommitUrl } from "@draftpkg/config";
+
 import type { PackResult } from "./pack";
 
 export interface UploadOptions {
@@ -17,9 +21,29 @@ export interface HttpClient {
 }
 
 export async function uploadPackages(
-  _packages: PackResult[],
-  _options: UploadOptions,
-  _httpClient: HttpClient,
+  packages: PackResult[],
+  options: UploadOptions,
+  httpClient: HttpClient,
 ): Promise<void> {
-  throw new Error("Not implemented");
+  for (const pkg of packages) {
+    const url = buildCommitUrl({
+      baseUrl: options.workerUrl,
+      org: options.org,
+      repo: options.repo,
+      sha: options.sha,
+      packageName: pkg.packageName,
+    });
+
+    const body = new Uint8Array(await fs.readFile(pkg.tarballPath));
+
+    const { status } = await httpClient.post(url, body, {
+      authorization: `Bearer ${options.apiKey}`,
+    });
+
+    if (status !== 201) {
+      throw new Error(
+        `Failed to upload ${pkg.packageName}: server responded with ${status}`,
+      );
+    }
+  }
 }
