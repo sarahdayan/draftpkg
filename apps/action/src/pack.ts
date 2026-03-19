@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { Executor } from "./executor";
 import type { ResolvedPackage } from "./resolve-packages";
 
@@ -7,9 +9,26 @@ export interface PackResult {
 }
 
 export async function packPackages(
-  _packages: ResolvedPackage[],
-  _publishDirectory: Record<string, string>,
-  _executor: Executor,
+  packages: ResolvedPackage[],
+  publishDirectory: Record<string, string>,
+  repoRoot: string,
+  executor: Executor,
 ): Promise<PackResult[]> {
-  throw new Error("Not implemented");
+  const results: PackResult[] = [];
+
+  for (const pkg of packages) {
+    const packDir = publishDirectory[pkg.name]
+      ? path.join(repoRoot, publishDirectory[pkg.name])
+      : pkg.path;
+
+    const { stdout } = await executor.run("npm pack", { cwd: packDir });
+    const tarballName = stdout.trim();
+
+    results.push({
+      packageName: pkg.name,
+      tarballPath: path.join(packDir, tarballName),
+    });
+  }
+
+  return results;
 }

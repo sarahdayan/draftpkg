@@ -16,7 +16,7 @@ describe("packPackages", () => {
   it("runs `npm pack` in the package directory", async () => {
     const packages: ResolvedPackage[] = [{ name: "my-lib", path: "/repo" }];
 
-    await packPackages(packages, {}, executor);
+    await packPackages(packages, {}, "/repo", executor);
 
     expect(executor.calls).toEqual([{ command: "npm pack", cwd: "/repo" }]);
   });
@@ -24,7 +24,7 @@ describe("packPackages", () => {
   it("returns tarball paths from `npm pack` output", async () => {
     const packages: ResolvedPackage[] = [{ name: "my-lib", path: "/repo" }];
 
-    const results = await packPackages(packages, {}, executor);
+    const results = await packPackages(packages, {}, "/repo", executor);
 
     expect(results).toEqual([
       { packageName: "my-lib", tarballPath: "/repo/my-lib-1.0.0.tgz" },
@@ -42,7 +42,7 @@ describe("packPackages", () => {
       { name: "@scope/beta", path: "/repo/packages/beta" },
     ];
 
-    const results = await packPackages(packages, {}, executor);
+    const results = await packPackages(packages, {}, "/repo", executor);
 
     expect(results).toEqual([
       {
@@ -68,6 +68,7 @@ describe("packPackages", () => {
     const results = await packPackages(
       packages,
       { react: "build/node_modules/react" },
+      "/repo",
       executor,
     );
 
