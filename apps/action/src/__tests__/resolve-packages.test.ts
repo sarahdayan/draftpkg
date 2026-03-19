@@ -72,9 +72,7 @@ describe("resolvePackages", () => {
 
     const packages = await resolvePackages("/repo", ["packages/*"]);
 
-    expect(packages).toEqual([
-      { name: "real", path: "/repo/packages/real" },
-    ]);
+    expect(packages).toEqual([{ name: "real", path: "/repo/packages/real" }]);
   });
 
   it("throws when an explicit path has no `package.json`", async () => {

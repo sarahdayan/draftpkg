@@ -1,5 +1,5 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import fs from "node:fs/promises";
+import path from "node:path";
 
 export interface ResolvedPackage {
   name: string;
@@ -39,12 +39,12 @@ export async function resolvePackages(
 }
 
 function isGlob(pattern: string): boolean {
-  return pattern.includes('*');
+  return pattern.includes("*");
 }
 
 async function readPackageName(dir: string): Promise<string | null> {
   try {
-    const content = await fs.readFile(path.join(dir, 'package.json'), 'utf-8');
+    const content = await fs.readFile(path.join(dir, "package.json"), "utf-8");
     const pkg = JSON.parse(content) as { name?: string };
 
     return pkg.name ?? null;
@@ -57,7 +57,7 @@ async function expandGlob(
   repoRoot: string,
   pattern: string,
 ): Promise<string[]> {
-  const parts = pattern.split('*');
+  const parts = pattern.split("*");
 
   if (parts.length !== 2) {
     throw new Error(`Unsupported glob pattern: ${pattern}`);

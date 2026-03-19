@@ -18,9 +18,7 @@ export async function packPackages(
 
   for (const pkg of packages) {
     const publishDir = publishDirectory[pkg.name];
-    const packDir = publishDir
-      ? path.join(repoRoot, publishDir)
-      : pkg.path;
+    const packDir = publishDir ? path.join(repoRoot, publishDir) : pkg.path;
 
     const { stdout } = await executor.run("npm pack", { cwd: packDir });
     const tarballName = stdout.trim();
