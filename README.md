@@ -14,12 +14,15 @@ The Worker serves as your private registry. It runs on Cloudflare Workers with R
 npx draftpkg setup
 ```
 
-This will:
+This creates a `draftpkg-worker/` directory in your current folder with the Worker project, then:
 
-1. Create a KV namespace for metadata
-2. Create an R2 bucket for tarballs
-3. Deploy the Worker
-4. Generate an API key
+1. Creates a KV namespace for metadata
+2. Creates an R2 bucket for tarballs
+3. Installs dependencies
+4. Deploys the Worker
+5. Generates and sets an API key
+
+You can specify a custom directory: `npx draftpkg setup my-registry`.
 
 At the end, you'll see:
 
@@ -28,6 +31,7 @@ Draftpkg is ready!
 
   Worker URL: https://draftpkg-worker.<your-subdomain>.workers.dev
   API Key:    <generated-key>
+  Directory:  /path/to/draftpkg-worker
 
 Add these as secrets in your GitHub repo:
   DRAFTPKG_WORKER_URL
