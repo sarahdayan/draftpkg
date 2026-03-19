@@ -4,5 +4,5 @@ export interface ExecResult {
 }
 
 export interface Executor {
-  run(command: string): Promise<ExecResult>;
+  run(command: string, options?: { cwd?: string }): Promise<ExecResult>;
 }
