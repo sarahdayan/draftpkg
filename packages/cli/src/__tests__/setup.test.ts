@@ -40,7 +40,7 @@ describe("setup", () => {
 
     const files = vol.toJSON();
 
-    expect(files[`${TARGET_DIR}/src/index.ts`]).toBeTruthy();
+    expect(files[`${TARGET_DIR}/src/index.js`]).toBeTruthy();
     expect(files[`${TARGET_DIR}/wrangler.toml`]).toBeTruthy();
     expect(files[`${TARGET_DIR}/package.json`]).toBeTruthy();
   });
