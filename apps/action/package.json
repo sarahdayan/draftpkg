@@ -10,7 +10,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@draftpkg/config": "workspace:*"
+    "@draftpkg/config": "workspace:*",
+    "@octokit/rest": "^22.0.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

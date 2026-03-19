@@ -1,6 +1,8 @@
 import { buildCommitUrl } from "@draftpkg/config";
 
 import { runBuild } from "./build";
+import { postPrComment } from "./comment";
+import type { GitHubClient } from "./comment";
 import { createExecutor } from "./executor";
 import { createHttpClient } from "./http-client";
 import { loadConfig } from "./load-config";
@@ -15,6 +17,8 @@ export interface RunOptions {
   org: string;
   repo: string;
   sha: string;
+  prNumber?: number;
+  github?: GitHubClient;
 }
 
 export async function run(options: RunOptions): Promise<void> {
@@ -58,5 +62,20 @@ export async function run(options: RunOptions): Promise<void> {
       packageName: result.packageName,
     });
     console.log(`  npm install ${url}`);
+  }
+
+  if (options.prNumber && options.github) {
+    console.log("Posting PR comment…");
+    await postPrComment(
+      {
+        org: options.org,
+        repo: options.repo,
+        prNumber: options.prNumber,
+        sha: options.sha,
+        workerUrl: options.workerUrl,
+        packageNames: results.map((r) => r.packageName),
+      },
+      options.github,
+    );
   }
 }
