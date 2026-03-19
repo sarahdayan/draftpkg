@@ -1,3 +1,7 @@
+import { buildCommitUrl } from "@draftpkg/config";
+
+const MARKER = "<!-- draftpkg -->";
+
 export interface GitHubComment {
   id: number;
   body: string;
@@ -33,8 +37,53 @@ export interface CommentOptions {
 }
 
 export async function postPrComment(
-  _options: CommentOptions,
-  _github: GitHubClient,
+  options: CommentOptions,
+  github: GitHubClient,
 ): Promise<void> {
-  throw new Error("Not implemented");
+  const body = buildCommentBody(options);
+
+  const comments = await github.listComments(
+    options.org,
+    options.repo,
+    options.prNumber,
+  );
+
+  const existing = comments.find((c) => c.body.includes(MARKER));
+
+  if (existing) {
+    await github.updateComment(options.org, options.repo, existing.id, body);
+  } else {
+    await github.createComment(
+      options.org,
+      options.repo,
+      options.prNumber,
+      body,
+    );
+  }
+}
+
+function buildCommentBody(options: CommentOptions): string {
+  const rows = options.packageNames.map((name) => {
+    const url = buildCommitUrl({
+      baseUrl: options.workerUrl,
+      org: options.org,
+      repo: options.repo,
+      sha: options.sha,
+      packageName: name,
+    });
+
+    return `| \`${name}\` | \`npm install ${url}\` |`;
+  });
+
+  return [
+    MARKER,
+    "",
+    "### Draftpkg",
+    "",
+    `Built from ${options.sha}`,
+    "",
+    "| Package | Install |",
+    "|---|---|",
+    ...rows,
+  ].join("\n");
 }
