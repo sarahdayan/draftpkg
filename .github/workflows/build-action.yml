@@ -1,0 +1,37 @@
+name: Build Action
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/action/**"
+      - "packages/config/**"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @draftpkg/action build
+
+      - name: Commit dist
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/action/dist/main.mjs -f
+          git diff --staged --quiet && exit 0
+          git commit -m "chore: rebuild action dist"
+          git push
