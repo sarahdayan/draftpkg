@@ -1,17 +1,26 @@
-import { loadConfig } from "./load-config";
-import { resolvePackages } from "./resolve-packages";
+import { buildCommitUrl } from "@draftpkg/config";
+
 import { runBuild } from "./build";
-import { packPackages } from "./pack";
 import { createExecutor } from "./executor";
-import type { PackResult } from "./pack";
+import { createHttpClient } from "./http-client";
+import { loadConfig } from "./load-config";
+import { packPackages } from "./pack";
+import { resolvePackages } from "./resolve-packages";
+import { uploadPackages } from "./upload";
 
 export interface RunOptions {
   repoRoot: string;
+  workerUrl: string;
+  apiKey: string;
+  org: string;
+  repo: string;
+  sha: string;
 }
 
-export async function run(options: RunOptions): Promise<PackResult[]> {
+export async function run(options: RunOptions): Promise<void> {
   const { repoRoot } = options;
   const executor = createExecutor();
+  const httpClient = createHttpClient();
 
   console.log(`Loading config from ${repoRoot}…`);
   const config = await loadConfig(repoRoot);
@@ -36,5 +45,18 @@ export async function run(options: RunOptions): Promise<PackResult[]> {
     console.log(`  ${result.packageName} → ${result.tarballPath}`);
   }
 
-  return results;
+  console.log("Uploading…");
+  await uploadPackages(results, options, httpClient);
+
+  console.log("Done! Install URLs:");
+  for (const result of results) {
+    const url = buildCommitUrl({
+      baseUrl: options.workerUrl,
+      org: options.org,
+      repo: options.repo,
+      sha: options.sha,
+      packageName: result.packageName,
+    });
+    console.log(`  npm install ${url}`);
+  }
 }
