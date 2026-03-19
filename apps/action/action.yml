@@ -1,0 +1,15 @@
+name: "Draftpkg"
+description: "Build and publish npm packages from pull requests"
+inputs:
+  worker-url:
+    description: "URL of your Draftpkg Worker (e.g. https://pkg.example.com)"
+    required: true
+  api-key:
+    description: "API key for authenticating with the Worker"
+    required: true
+  sha:
+    description: "Commit SHA to publish (defaults to PR head SHA)"
+    required: false
+runs:
+  using: "node20"
+  main: "dist/main.mjs"

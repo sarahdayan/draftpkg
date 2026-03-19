@@ -1,0 +1,18 @@
+# .github/workflows/draftpkg.yml
+name: Draftpkg
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: draftpkg/action@main
+        with:
+          worker-url: ${{ secrets.DRAFTPKG_WORKER_URL }}
+          api-key: ${{ secrets.DRAFTPKG_API_KEY }}
+          sha: ${{ github.event.pull_request.head.sha }}
