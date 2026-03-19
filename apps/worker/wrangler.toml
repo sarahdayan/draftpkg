@@ -1,0 +1,11 @@
+name = "draftpkg-worker"
+main = "src/index.ts"
+compatibility_date = "2025-05-26"
+
+[[kv_namespaces]]
+binding = "METADATA"
+id = "placeholder"
+
+[[r2_buckets]]
+binding = "TARBALLS"
+bucket_name = "draftpkg-tarballs"
