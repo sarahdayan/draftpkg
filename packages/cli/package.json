@@ -5,6 +5,9 @@
   "bin": {
     "draftpkg": "dist/cli.mjs"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "esbuild src/cli.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/cli.mjs",
     "check-types": "tsc --noEmit",
