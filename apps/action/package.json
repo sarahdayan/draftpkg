@@ -6,8 +6,9 @@
   "scripts": {
     "build": "esbuild src/main.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/main.mjs",
     "check-types": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run src/",
+    "test:e2e": "vitest run tests/",
+    "test:watch": "vitest src/"
   },
   "dependencies": {
     "@draftpkg/config": "workspace:*",

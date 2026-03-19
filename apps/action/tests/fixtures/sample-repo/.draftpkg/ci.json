@@ -1,0 +1,5 @@
+{
+  "installCommand": false,
+  "buildCommand": "build",
+  "packages": ["packages/*"]
+}
