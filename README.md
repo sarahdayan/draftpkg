@@ -1,156 +1,152 @@
-# Turborepo starter
+# Draftpkg
 
-This Turborepo starter is maintained by the Turborepo core team.
+A self-hosted drop-in replacement for [CodeSandbox CI](https://codesandbox.io/docs/learn/ci). Draftpkg automatically builds npm packages from pull requests and publishes them to a private registry, so developers can test unreleased library changes with standard `npm install`.
 
-## Using this example
+## Setup
 
-Run the following command:
+### 1. Deploy the Worker
 
-```sh
-npx create-turbo@latest
-```
+The Worker serves as your private registry. It runs on Cloudflare Workers with R2 (storage) and KV (metadata).
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+**Prerequisites:** a Cloudflare account.
 
 ```sh
-cd my-turborepo
-turbo build
+# Clone this repo
+git clone https://github.com/draftpkg/draftpkg.git
+cd draftpkg
+
+# Install dependencies
+pnpm install
+
+# Configure your Cloudflare account
+cd apps/worker
+
+# Edit wrangler.toml:
+# - Set a KV namespace ID (create one with `wrangler kv namespace create METADATA`)
+# - Set your R2 bucket name (create one with `wrangler r2 bucket create draftpkg-tarballs`)
+
+# Deploy
+wrangler deploy
+
+# Set your API key as a secret
+wrangler secret put API_KEY
 ```
 
-Without global `turbo`, use your package manager:
+Your registry is now live at `https://draftpkg-worker.<your-subdomain>.workers.dev`.
+
+### 2. Add the Action to your repo
+
+In the repository you want to build packages from:
+
+**Add a config file** at `.draftpkg/ci.json` (or reuse your existing `.codesandbox/ci.json`):
+
+```json
+{
+  "installCommand": "install",
+  "buildCommand": "build",
+  "packages": ["packages/*"]
+}
+```
+
+**Add the workflow** at `.github/workflows/draftpkg.yml`:
+
+```yaml
+name: Draftpkg
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: draftpkg/action@main
+        with:
+          worker-url: ${{ secrets.DRAFTPKG_WORKER_URL }}
+          api-key: ${{ secrets.DRAFTPKG_API_KEY }}
+          sha: ${{ github.event.pull_request.head.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+**Add secrets** to your repo (Settings > Secrets and variables > Actions):
+
+- `DRAFTPKG_WORKER_URL` — your Worker URL (e.g. `https://draftpkg-worker.example.workers.dev`)
+- `DRAFTPKG_API_KEY` — the API key you set with `wrangler secret put`
+
+### 3. Open a PR
+
+When a PR is opened or updated, Draftpkg will:
+
+1. Build your packages
+2. Upload them to your registry
+3. Post a comment on the PR with install URLs
+
+Install a draft build in any project:
 
 ```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+npm install https://pkg.example.com/your-org/your-repo/commit/abc123/your-package
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## `ci.json` reference
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Place this file at `.draftpkg/ci.json` or `.codesandbox/ci.json`. If both exist, `.draftpkg/ci.json` takes precedence.
+
+| Field              | Type              | Default     | Description                                                               |
+| ------------------ | ----------------- | ----------- | ------------------------------------------------------------------------- |
+| `installCommand`   | `string \| false` | `"install"` | Script in package.json to run for install. Set to `false` to skip.        |
+| `buildCommand`     | `string \| false` | `"build"`   | Script in package.json to run for build. Set to `false` to skip.          |
+| `packages`         | `string[]`        | `["."]`     | Paths or glob patterns to packages. For monorepos, e.g. `["packages/*"]`. |
+| `publishDirectory` | `object`          | `{}`        | Map of package name to directory to pack from, relative to repo root.     |
+| `node`             | `string`          | `"24"`      | Node.js version to use for building.                                      |
+
+### Example: monorepo with custom publish directories
+
+```json
+{
+  "buildCommand": "build",
+  "packages": ["packages/react", "packages/react-dom"],
+  "publishDirectory": {
+    "react": "build/node_modules/react",
+    "react-dom": "build/node_modules/react-dom"
+  }
+}
+```
+
+## URL scheme
+
+```
+https://<worker-url>/<org>/<repo>/commit/<sha>/<package-name>
+```
+
+Scoped packages use their full name:
+
+```
+https://pkg.example.com/algolia/instantsearch/commit/abc123/@algolia/client-search
+```
+
+## Architecture
+
+```
+apps/
+  action/     GitHub Action — builds, packs, uploads, comments on PRs
+  worker/     Cloudflare Worker — upload API (authed) + registry (public)
+
+packages/
+  config/     Shared types, ci.json parser, URL helpers
+```
+
+## Development
 
 ```sh
-turbo build --filter=docs
+pnpm install
+pnpm test        # unit tests
+pnpm check-types # type checking
 ```
 
-Without global `turbo`:
+## License
 
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+MIT
